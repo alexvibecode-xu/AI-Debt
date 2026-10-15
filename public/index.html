@@ -120,6 +120,8 @@
   .swatch { display: inline-block; width: 10px; height: 10px; border-radius: 2px; vertical-align: -1px; margin-right: 4px; }
   .banner { background: var(--hover); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; margin: 12px 0; font-size: 13px; color: var(--ink-2); }
   .banner.sample { border-color: #eda100; }
+  .banner form { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 6px; }
+  .banner input[type=password] { font: inherit; padding: 7px 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); color: var(--ink); min-width: 220px; }
   .banner b { color: var(--ink); }
 
   .tablehead { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px; margin: 4px 0 8px; }
@@ -192,7 +194,10 @@
     <p>Public debt, lease and structured financings to GPU clouds, AI campus developers and former miners. Every row links to its source.</p>
   </header>
 
-  
+  <nav class="tabs" role="tablist">
+    <button class="tab on" data-tab="tracker" role="tab">Tracker</button>
+    <button class="tab" data-tab="market" role="tab">Market</button>
+  </nav>
 
   <!-- ======================= TRACKER TAB ======================= -->
   <section id="tab-tracker">
@@ -253,11 +258,77 @@
     <p><b>Market</b> says whether the instrument trades: <i>Traded bond</i> = senior or convertible notes sold to investors (Bloomberg has a price); <i>Syndicated loan</i> = broadly syndicated term loan that trades in the loan market; <i>Private</i> = bank facilities, private credit, leases and vendor financing with no market price. Traded rows show their Bloomberg ISIN (one per tranche); <b>BBG ID: NA</b> means Bloomberg has no record of the instrument yet. The per-tranche list is in <code>data/bonds.csv</code>.</p>
     <p><b>Rating</b> comes from one source, <a href="https://ccir.io/credit#rated" target="_blank" rel="noopener">ccir.io's rated GPU-collateral financings</a>, matched to deals by borrower, date and size. Hover a rating for the facility name, the date it entered the public record and the offtaker. A dash means no public agency grade is on record there, not that the deal is unrated.</p>
     <p>Data scraped from <a href="https://www.amcompute.com/gpu-financing-tracker" target="_blank" rel="noopener">American Compute's GPU Financing Tracker</a>. Amounts are as announced; the source site's own headline total counts new money only, so it can be lower than the sum shown here. Convertible notes, senior notes, loans and leases are all included; filter by type to narrow.</p>
-    <p>Data refreshes automatically every weekday morning (GitHub Actions re-runs the scraper and republishes this page).</p>
+    <p>Deal data refreshes automatically every weekday morning (GitHub Actions re-runs the scraper and republishes this page); market data is pushed after each Bloomberg close.</p>
   </footer>
   </section>
 
-  
+  <!-- ======================= MARKET TAB ======================= -->
+  <section id="tab-market" hidden>
+    <div class="meta" id="mMeta"></div>
+    <div class="banner" id="mBanner" hidden></div>
+
+    <div id="mBody" hidden>
+      <div class="card brief" id="mBrief"></div>
+
+      <div class="tablehead">
+        <h2>Trading summary by company</h2>
+        <span class="count" id="mCount"></span>
+      </div>
+      <div class="tablewrap">
+        <table class="summary" id="mtbl">
+          <thead>
+            <tr>
+              <th class="grp"></th><th class="grp"></th>
+              <th class="grp" colspan="9" style="border-left:1px solid var(--axis)">Price · % change</th>
+              <th class="grp"></th>
+              <th class="grp" colspan="9" style="border-left:1px solid var(--axis)">YTM · change in bp</th>
+              <th class="grp"></th>
+            </tr>
+            <tr id="mHead">
+              <th data-s="group" title="Back to the grouped view">Company / bond<span class="dir"></span></th><th class="r" data-s="px">Price<span class="dir"></span></th>
+              <th class="r sep" data-s="px:1D">1D<span class="dir"></span></th><th class="r" data-s="px:WTD">WTD<span class="dir"></span></th><th class="r" data-s="px:MTD">MTD<span class="dir"></span></th><th class="r" data-s="px:YTD">YTD<span class="dir"></span></th><th class="r" data-s="px:3M">3M<span class="dir"></span></th><th class="r" data-s="px:6M">6M<span class="dir"></span></th><th class="r" data-s="px:9M">9M<span class="dir"></span></th><th class="r" data-s="px:12M">12M<span class="dir"></span></th><th class="r" data-s="px:SI">Since issue<span class="dir"></span></th>
+              <th class="r sep" data-s="ytm">YTM %<span class="dir"></span></th>
+              <th class="r sep" data-s="ytm:1D">1D<span class="dir"></span></th><th class="r" data-s="ytm:WTD">WTD<span class="dir"></span></th><th class="r" data-s="ytm:MTD">MTD<span class="dir"></span></th><th class="r" data-s="ytm:YTD">YTD<span class="dir"></span></th><th class="r" data-s="ytm:3M">3M<span class="dir"></span></th><th class="r" data-s="ytm:6M">6M<span class="dir"></span></th><th class="r" data-s="ytm:9M">9M<span class="dir"></span></th><th class="r" data-s="ytm:12M">12M<span class="dir"></span></th><th class="r" data-s="ytm:SI">Since issue<span class="dir"></span></th>
+              <th class="sep" title="Bond-level ratings from Bloomberg: Moody's / S&amp;P / Fitch">Rating (Mdy / S&amp;P / Fitch)</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="legend-note">Company rows are deal-size-weighted averages of the bonds below them. Click a company to chart all its bonds, click a bond to chart it alone. Price changes in percent; YTM changes in basis points. <b>Click any column header</b> to rank every bond by that column (largest move first; click again to flip); click "Company / bond" to return to the grouped view.</div>
+
+      <div class="tablehead" style="margin-top:20px"><h2>Charts</h2></div>
+      <section class="filters">
+        <select id="mCompany"></select>
+        <button class="btn" id="mAll">All bonds</button>
+        <button class="btn" id="mNone">Clear</button>
+        <span class="seg" id="mRange">
+          <button data-r="1M">1M</button><button data-r="3M">3M</button><button data-r="6M" class="on">6M</button><button data-r="YTD">YTD</button><button data-r="1Y">1Y</button><button data-r="ALL">All</button>
+        </span>
+      </section>
+      <div class="chips" id="mChips"></div>
+
+      <section class="charts">
+        <div class="card">
+          <h2>Price</h2>
+          <div class="sub" id="mPxSub">Clean price, Bloomberg PX_LAST · hover for values</div>
+          <div class="chart tall" id="mPx"></div>
+          <div class="legend" id="mPxLegend"></div>
+        </div>
+        <div class="card">
+          <h2>Yield to maturity, %</h2>
+          <div class="sub" id="mYSub">Bloomberg YLD_YTM_MID · convertibles' yields reflect equity optionality</div>
+          <div class="chart tall" id="mY"></div>
+          <div class="legend" id="mYLegend"></div>
+        </div>
+      </section>
+    </div>
+
+    <footer>
+      <p>Market data comes from the <b>History</b> sheet of the AI Debt Tracker workbook, which pulls daily price and yield per bond from Bloomberg. To refresh: open the workbook on the Bloomberg machine, wait for the History sheet to fill, save, close, then run <b>Export market data.cmd</b> and reload this page. Change windows are computed from that history: 1D vs. the prior close, WTD vs. last Friday, MTD vs. prior month-end, YTD vs. December 31, 3M/6M/9M/12M vs. the same calendar day, since issue vs. the first available price.</p>
+      <p>Bonds that share an ISIN (add-on taps) appear once. Bonds without a Bloomberg ID are listed on the Tracker tab as "BBG ID: NA" and are not here. The Rating column here is the bond-level agency rating from Bloomberg (Moody's / S&amp;P / Fitch); "unrated" means none of the three rates that bond, which is common for convertibles. The Tracker tab's Rating column is the ccir.io facility grade instead.</p>
+    </footer>
+  </section>
 </div>
 
 <script src="data/deals.js"></script>
@@ -500,7 +571,318 @@ document.querySelectorAll('.tab').forEach(b => b.onclick = () => showTab(b.datas
 })();
 </script>
 
+<script>
+// ------------------------------------------------------------------ MARKET TAB
+window.initMarket = function () {
+  const M = window.MARKET;
+  const WINDOWS = ['1D', 'WTD', 'MTD', 'YTD', '3M', '6M', '9M', '12M', 'SI'];
+  const COLORS = ['--c1', '--c2', '--c3', '--c4', '--c5', '--c6', '--c7', '--c8'];
+  const css = v => getComputedStyle(root).getPropertyValue(v).trim();
 
+  if (!M || !M.bonds || !M.bonds.some(b => b.has_data)) {
+    $('mMeta').textContent = '';
+    $('mBanner').hidden = false;
+    $('mBanner').innerHTML = `<b>No market data yet.</b> Open the AI Debt Tracker workbook on the Bloomberg machine, wait for the <b>History</b> sheet to fill, press Ctrl+S, close it, then double-click <b>Export market data.cmd</b> and reload this page.` +
+      (M ? '' : ' <span class="count">(no market data file found)</span>');
+    window.renderMarket = () => {};
+    return;
+  }
+  if (M.meta.sample) { $('mBanner').hidden = false; $('mBanner').className = 'banner sample'; $('mBanner').innerHTML = '<b>SAMPLE DATA.</b> These prices and yields are random numbers used to preview the layout. Real data appears after the first Bloomberg export.'; }
+  $('mBody').hidden = false;
+  $('mMeta').innerHTML = `Bloomberg data as of <b>${esc(M.meta.as_of)}</b> · exported ${esc(M.meta.exported_at)} from ${esc(M.meta.workbook)} · ${M.meta.with_data} of ${M.meta.bond_count} bonds have history`;
+
+  // ---- bonds grouped by company, colors fixed by position within the company
+  const bonds = M.bonds.slice().sort((a, b) => a.borrower.localeCompare(b.borrower) || a.first_deal_date.localeCompare(b.first_deal_date) || a.tranche.localeCompare(b.tranche));
+  const companies = [];
+  const byCo = {};
+  bonds.forEach(b => { if (!byCo[b.borrower]) { byCo[b.borrower] = []; companies.push(b.borrower); } b.color = COLORS[byCo[b.borrower].length] || null; byCo[b.borrower].push(b); });
+  const shortName = b => {
+    const t = b.tranche.replace(/\s*\(.*$/, '');                 // drop "($4.2B deal, Sep 2026)"
+    const when = (b.tranche.match(/,\s*([A-Z][a-z]{2} \d{4})\)/) || [])[1];
+    return t.replace(b.borrower, '').trim().replace(/^convertible notes/, 'conv. notes') + (when ? ` · ${when}` : '');
+  };
+
+  // ---- formatting
+  const fPx = v => v == null ? '–' : v.toFixed(2);
+  const fY = v => v == null ? '–' : v.toFixed(2);
+  const fPct = v => v == null ? '<span class="nil">–</span>' : `<span class="${v > 0 ? 'pos' : v < 0 ? 'neg' : ''}">${v > 0 ? '+' : ''}${(v * 100).toFixed(1)}%</span>`;
+  const fBp = v => v == null ? '<span class="nil">–</span>' : `<span class="${v > 0 ? 'neg' : v < 0 ? 'pos' : ''}">${v > 0 ? '+' : ''}${Math.round(v * 100)}</span>`;
+  const fRating = b => {
+    const r = b.bbg_ratings || {};
+    if (r.moody || r.sp || r.fitch) return `<span title="Bloomberg: Moody's / S&amp;P / Fitch">${esc(r.moody || '–')} / ${esc(r.sp || '–')} / ${esc(r.fitch || '–')}</span>`;
+    if (b.rating) return `<span class="nil" title="ccir.io facility grade (no bond-level agency rating in Bloomberg)">${esc(b.rating)}</span>`;
+    return '<span class="nil">unrated</span>';
+  };
+  const wavg = (arr, key, w) => { const xs = arr.filter(b => key(b) != null); const tw = xs.reduce((s, b) => s + w(b), 0); return xs.length && tw ? xs.reduce((s, b) => s + key(b) * w(b), 0) / tw : null; };
+
+  // ---- state
+  let sel = { company: companies.includes('CoreWeave') ? 'CoreWeave' : companies[0], bonds: new Set(), range: '6M', collapsed: new Set(), sort: null, dir: -1 };
+  document.querySelectorAll('#mHead th[data-s]').forEach(th => th.onclick = () => {
+    const k = th.dataset.s;
+    if (k === 'group') { sel.sort = null; }
+    else if (sel.sort === k) { sel.dir *= -1; }
+    else { sel.sort = k; sel.dir = -1; }
+    render();
+  });
+  const sortVal = (b, k) => {
+    if (!b.has_data) return null;
+    if (k === 'px') return b.px;
+    if (k === 'ytm') return b.ytm;
+    const [f, w] = k.split(':');
+    return (f === 'px' ? b.px_chg : b.ytm_chg)[w];
+  };
+  sel.bonds = new Set(byCo[sel.company].map(b => b.isin));
+  const coSel = $('mCompany');
+  companies.forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = `${c} (${byCo[c].length})`; coSel.appendChild(o); });
+  coSel.value = sel.company;
+  coSel.onchange = () => { sel.company = coSel.value; sel.bonds = new Set(byCo[sel.company].map(b => b.isin)); render(); };
+  $('mAll').onclick = () => { sel.bonds = new Set(byCo[sel.company].map(b => b.isin)); render(); };
+  $('mNone').onclick = () => { sel.bonds = new Set(); render(); };
+  document.querySelectorAll('#mRange button').forEach(b => b.onclick = () => { sel.range = b.dataset.r; render(); });
+
+  // ---- auto-written market read (from the same numbers as the table below)
+  function renderBrief() {
+    const live = bonds.filter(b => b.has_data);
+    const w = b => b.deal_amount_musd || 1;
+    const WIN = [['1D', 'Today'], ['WTD', 'This week'], ['MTD', 'This month'], ['3M', 'Last 3 months']];
+    const name = b => `${esc(b.borrower)} <span class="who">${esc(shortName(b))}</span>`;
+    const ext = (key, pick) => { const xs = live.filter(b => key(b) != null); if (!xs.length) return null; return xs.reduce((m, b) => pick(key(b), key(m)) ? b : m, xs[0]); };
+    const dirPx = v => v == null ? 'no data' : v > 0.005 ? 'rising' : v < -0.005 ? 'falling' : 'flat';
+    const dirY = v => v == null ? 'no data' : v > 0.10 ? 'rising (wider)' : v < -0.10 ? 'falling (tighter)' : 'flat';
+    const coMove = (k, f) => {   // company with the largest size-weighted move in this window
+      let best = null;
+      companies.forEach(c => { const v = wavg(byCo[c].filter(b => b.has_data), b => f(b)[k], w); if (v != null && (best == null || Math.abs(v) > Math.abs(best.v))) best = { c, v }; });
+      return best;
+    };
+    const pxLines = [], yLines = [];
+    WIN.slice(1).forEach(([k, label]) => {
+      const xs = live.filter(b => b.px_chg[k] != null);
+      const avg = wavg(live, b => b.px_chg[k], w), yavg = wavg(live, b => b.ytm_chg[k], w);
+      const down = xs.filter(b => b.px_chg[k] < 0).length, up = xs.filter(b => b.px_chg[k] > 0).length;
+      const cm = coMove(k, b => b.px_chg), cy = coMove(k, b => b.ytm_chg);
+      pxLines.push(`<li><b>${label}:</b> ${dirPx(avg)} · avg ${fPct(avg)} · ${down} of ${xs.length} bonds down, ${up} up` + (cm ? ` · most moved: ${esc(cm.c)} ${fPct(cm.v)}` : '') + '</li>');
+      yLines.push(`<li><b>${label}:</b> ${dirY(yavg)} · avg ${fBp(yavg)}bp` + (cy ? ` · most moved: ${esc(cy.c)} ${fBp(cy.v)}bp` : '') + '</li>');
+    });
+    const rows = WIN.map(([k, label]) => {
+      const pf = ext(b => b.px_chg[k], (a, c) => a < c), pr = ext(b => b.px_chg[k], (a, c) => a > c);
+      const yr = ext(b => b.ytm_chg[k], (a, c) => a > c), yf = ext(b => b.ytm_chg[k], (a, c) => a < c);
+      const cell = (b, v, f) => b && v(b) != null ? `${f(v(b))} ${name(b)}` : '<span class="nil">–</span>';
+      return `<tr><td>${label}</td>
+        <td>${cell(pf, b => b.px_chg[k], fPct)}</td><td>${cell(pr, b => b.px_chg[k], fPct)}</td>
+        <td>${cell(yr, b => b.ytm_chg[k], v => fBp(v) + 'bp')}</td><td>${cell(yf, b => b.ytm_chg[k], v => fBp(v) + 'bp')}</td></tr>`;
+    }).join('');
+    const today = ext(b => b.px_chg['1D'], (a, c) => Math.abs(a) > Math.abs(c));
+    const headline = today ? `Biggest move today: <b>${esc(today.borrower)}</b> ${esc(shortName(today))}, price ${fPct(today.px_chg['1D'])}` + (today.ytm_chg['1D'] != null ? `, yield ${fBp(today.ytm_chg['1D'])}bp` : '') + '.' : '';
+    $('mBrief').innerHTML = `<h2>Market read · as of ${esc(M.meta.as_of)}</h2>
+      <div class="sub">Written automatically from the table below. Averages are deal-size-weighted across the ${live.length} bonds with Bloomberg history. Price changes in percent, yield changes in basis points.</div>
+      <p style="margin:8px 0 0">${headline}</p>
+      <div class="grid">
+        <div><div class="k">Prices · direction</div><ul>${pxLines.join('')}</ul></div>
+        <div><div class="k">Yields · direction</div><ul>${yLines.join('')}</ul></div>
+      </div>
+      <table class="movers"><thead><tr><th></th><th>Biggest price fall</th><th>Biggest price rise</th><th>Biggest yield rise</th><th>Biggest yield fall</th></tr></thead><tbody>${rows}</tbody></table>`;
+  }
+
+  // ---- summary table
+  function renderSummary() {
+    const w = b => b.deal_amount_musd || 1;
+    const cells = (px, pxc, y, yc, rating) => [
+      `<td class="r">${px}</td>`,
+      ...WINDOWS.map((k, i) => `<td class="r${i === 0 ? ' sep' : ''}">${pxc(k)}</td>`),
+      `<td class="r sep">${y}</td>`,
+      ...WINDOWS.map((k, i) => `<td class="r${i === 0 ? ' sep' : ''}">${yc(k)}</td>`),
+      `<td class="sep">${rating}</td>`,
+    ].join('');
+    let html = '';
+    document.querySelectorAll('#mHead th .dir').forEach(s => s.textContent = '');
+    if (sel.sort) {
+      const th = document.querySelector(`#mHead th[data-s="${sel.sort}"] .dir`);
+      if (th) th.textContent = sel.dir < 0 ? '↓' : '↑';
+      const ranked = bonds.slice().sort((a, b) => {
+        const va = sortVal(a, sel.sort), vb = sortVal(b, sel.sort);
+        if (va == null && vb == null) return 0;
+        if (va == null) return 1;
+        if (vb == null) return -1;
+        return (vb - va) * -sel.dir;   // dir -1 = largest first
+      });
+      ranked.forEach((b, i) => {
+        const on = sel.company === b.borrower && sel.bonds.has(b.isin);
+        html += `<tr class="bond flat${on ? ' sel' : ''}" data-isin="${esc(b.isin)}" data-co="${esc(b.borrower)}"><td class="name" title="${esc(b.tranche)} · ${esc(b.isin)}"><span class="count">${i + 1}.</span> <span class="sw" style="background:${b.color ? `var(${b.color})` : 'var(--grid)'}"></span>${esc(b.borrower)} <span class="co">${esc(shortName(b))}</span></td>` +
+          (b.has_data ? cells(fPx(b.px), k => fPct(b.px_chg[k]), fY(b.ytm), k => fBp(b.ytm_chg[k]), fRating(b)) : `<td class="nil" colspan="21">no history yet</td>`) + '</tr>';
+      });
+    }
+    else companies.forEach(c => {
+      const bs = byCo[c], withData = bs.filter(b => b.has_data);
+      const open = !sel.collapsed.has(c);
+      html += `<tr class="co" data-co="${esc(c)}"><td class="name"><span class="caret">${open ? '▾' : '▸'}</span>${esc(c)} <span class="count">${withData.length}/${bs.length} with data</span></td>` +
+        cells(fPx(wavg(withData, b => b.px, w)), k => fPct(wavg(withData, b => b.px_chg[k], w)), fY(wavg(withData, b => b.ytm, w)), k => fBp(wavg(withData, b => b.ytm_chg[k], w)), '') + '</tr>';
+      if (open) bs.forEach(b => {
+        const on = sel.company === c && sel.bonds.has(b.isin);
+        html += `<tr class="bond${on ? ' sel' : ''}" data-isin="${esc(b.isin)}" data-co="${esc(c)}"><td class="name" title="${esc(b.tranche)} · ${esc(b.isin)}"><span class="sw" style="background:${b.color ? `var(${b.color})` : 'var(--grid)'}"></span>${esc(shortName(b))}</td>` +
+          (b.has_data ? cells(fPx(b.px), k => fPct(b.px_chg[k]), fY(b.ytm), k => fBp(b.ytm_chg[k]), fRating(b)) : `<td class="nil" colspan="21">no history yet</td>`) + '</tr>';
+      });
+    });
+    $('mtbl').querySelector('tbody').innerHTML = html;
+    $('mCount').textContent = `${bonds.length} bonds · ${companies.length} companies` + (sel.sort ? ` · ranked by ${document.querySelector(`#mHead th[data-s="${sel.sort}"]`).textContent.replace(/[↑↓]/g, '').trim()} (${sel.sort.startsWith('ytm') ? 'YTM' : 'price'})` : '');
+    $('mtbl').querySelectorAll('tr.co').forEach(tr => {
+      tr.querySelector('.caret').onclick = (e) => { e.stopPropagation(); const c = tr.dataset.co; sel.collapsed.has(c) ? sel.collapsed.delete(c) : sel.collapsed.add(c); render(); };
+      tr.onclick = () => { sel.company = tr.dataset.co; coSel.value = sel.company; sel.bonds = new Set(byCo[sel.company].map(b => b.isin)); render(); };
+    });
+    $('mtbl').querySelectorAll('tr.bond').forEach(tr => tr.onclick = () => {
+      if (sel.company !== tr.dataset.co) { sel.company = tr.dataset.co; coSel.value = sel.company; sel.bonds = new Set([tr.dataset.isin]); }
+      else if (sel.bonds.has(tr.dataset.isin) && sel.bonds.size === 1) sel.bonds = new Set(byCo[sel.company].map(b => b.isin));
+      else sel.bonds = new Set([tr.dataset.isin]);
+      render();
+    });
+  }
+
+  // ---- chips
+  function renderChips() {
+    $('mChips').innerHTML = byCo[sel.company].map(b => `<button class="chip${sel.bonds.has(b.isin) ? ' on' : ''}${b.has_data ? '' : ' nodata'}" data-isin="${esc(b.isin)}" style="--chipc:${b.color ? `var(${b.color})` : 'var(--muted)'}" title="${esc(b.tranche)}"><span class="sw"></span>${esc(shortName(b))}</button>`).join('');
+    $('mChips').querySelectorAll('.chip').forEach(ch => ch.onclick = () => { const i = ch.dataset.isin; sel.bonds.has(i) ? sel.bonds.delete(i) : sel.bonds.add(i); render(); });
+    document.querySelectorAll('#mRange button').forEach(b => b.classList.toggle('on', b.dataset.r === sel.range));
+  }
+
+  // ---- line chart
+  function rangeStart(asof) {
+    const d = new Date(asof + 'T00:00:00');
+    const r = sel.range;
+    if (r === 'ALL') return null;
+    if (r === 'YTD') return new Date(d.getFullYear() - 1, 11, 31);
+    const months = { '1M': 1, '3M': 3, '6M': 6, '1Y': 12 }[r];
+    return new Date(d.getFullYear(), d.getMonth() - months, d.getDate());
+  }
+  function lineChart(el, legendEl, series, opts) {
+    const W = el.clientWidth || 560, H = el.clientHeight || 300;
+    const m = { t: 12, r: opts.labels ? 118 : 12, b: 26, l: 44 };
+    const iw = W - m.l - m.r, ih = H - m.t - m.b;
+    const pts = series.flatMap(s => s.points);
+    if (!pts.length) { el.innerHTML = `<svg viewBox="0 0 ${W} ${H}"><text class="empty" x="${W / 2}" y="${H / 2}" text-anchor="middle">Select a bond to chart</text></svg>`; legendEl.innerHTML = ''; return; }
+    const x0 = Math.min(...pts.map(p => p[0])), x1 = Math.max(...pts.map(p => p[0]));
+    let lo = Math.min(...pts.map(p => p[1])), hi = Math.max(...pts.map(p => p[1]));
+    if (hi === lo) { hi += 1; lo -= 1; }
+    const step = niceStep(hi - lo, 4);
+    lo = Math.floor(lo / step) * step; hi = Math.ceil(hi / step) * step;
+    const X = t => m.l + (x1 === x0 ? 0 : (t - x0) / (x1 - x0)) * iw;
+    const Y = v => m.t + ih - (v - lo) / (hi - lo) * ih;
+    let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${opts.title}">`;
+    for (let v = lo; v <= hi + 1e-9; v += step) {
+      s += `<line class="grid" x1="${m.l}" x2="${W - m.r}" y1="${Y(v)}" y2="${Y(v)}"/><text x="${m.l - 6}" y="${Y(v) + 4}" text-anchor="end">${opts.tick(v)}</text>`;
+    }
+    // x ticks: month starts, thinned to ~ every 70px
+    const months = [];
+    const d = new Date(x0); d.setDate(1); d.setMonth(d.getMonth() + 1);
+    for (; d.getTime() <= x1; d.setMonth(d.getMonth() + 1)) months.push(new Date(d));
+    const every = Math.max(1, Math.ceil(months.length / Math.max(1, Math.floor(iw / 70))));
+    months.forEach((dt, i) => { if (i % every) return; const x = X(dt.getTime());
+      s += `<line class="grid" x1="${x}" x2="${x}" y1="${m.t}" y2="${m.t + ih}"/><text x="${x}" y="${H - m.b + 16}" text-anchor="middle">${dt.toLocaleString('en', { month: 'short' })}${dt.getMonth() === 0 || i === 0 ? ` '${String(dt.getFullYear()).slice(2)}` : ''}</text>`; });
+    s += `<line class="axis" x1="${m.l}" x2="${W - m.r}" y1="${m.t + ih}" y2="${m.t + ih}"/>`;
+    const endLabels = [];
+    series.forEach((sr, i) => {
+      let dPath = '', pen = false;
+      sr.points.forEach(p => { if (p[1] == null) { pen = false; return; } dPath += `${pen ? 'L' : 'M'}${X(p[0]).toFixed(1)},${Y(p[1]).toFixed(1)}`; pen = true; });
+      s += `<path class="line" d="${dPath}" stroke="${sr.color}"/>`;
+      const last = [...sr.points].reverse().find(p => p[1] != null);
+      sr.last = last ? last[1] : null;
+      if (opts.labels && last) endLabels.push({ y: Y(last[1]), text: `<tspan font-weight="600">${opts.fmt(last[1])}</tspan> ${esc(sr.short.length > 12 ? sr.short.slice(0, 11) + '…' : sr.short)}` });
+      s += `<circle class="dot" data-i="${i}" r="4" fill="${sr.color}"/>`;
+    });
+    // spread end labels that would overlap (12px minimum spacing), keeping them inside the plot
+    endLabels.sort((a, b) => a.y - b.y);
+    for (let i = 1; i < endLabels.length; i++) if (endLabels[i].y - endLabels[i - 1].y < 12) endLabels[i].y = endLabels[i - 1].y + 12;
+    for (let i = endLabels.length - 1; i >= 0; i--) { const maxY = m.t + ih - (endLabels.length - 1 - i) * 12; if (endLabels[i].y > maxY) endLabels[i].y = maxY; }
+    for (let i = 1; i < endLabels.length; i++) if (endLabels[i].y - endLabels[i - 1].y < 12) endLabels[i].y = endLabels[i - 1].y + 12;
+    endLabels.forEach(l => { s += `<text class="end" x="${W - m.r + 6}" y="${l.y + 4}">${l.text}</text>`; });
+    s += `<line class="xhair" x1="0" x2="0" y1="${m.t}" y2="${m.t + ih}"/><rect x="${m.l}" y="${m.t}" width="${iw}" height="${ih}" fill="transparent" class="hit"/></svg><div class="tip"></div>`;
+    el.innerHTML = s;
+    legendEl.innerHTML = series.map(sr => `<span><span class="swatch" style="background:${sr.color}"></span>${esc(sr.name)} <b>${sr.last == null ? '–' : opts.fmt(sr.last)}</b></span>`).join('');
+    const tip = el.querySelector('.tip'), xh = el.querySelector('.xhair'), dots = el.querySelectorAll('.dot');
+    const hit = el.querySelector('.hit');
+    hit.addEventListener('mousemove', (e) => {
+      const b = el.getBoundingClientRect();
+      const px = (e.clientX - b.left) * (W / b.width);
+      const t = x0 + (px - m.l) / iw * (x1 - x0);
+      let lines = '', when = null;
+      series.forEach((sr, i) => {
+        let p = null;
+        for (const q of sr.points) { if (q[0] <= t && q[1] != null) p = q; else if (q[0] > t) break; }
+        const dot = dots[i];
+        if (p) { dot.style.display = 'block'; dot.setAttribute('cx', X(p[0])); dot.setAttribute('cy', Y(p[1])); when = when == null ? p[0] : Math.max(when, p[0]);
+          lines += `<div class="row"><span><span class="swatch" style="background:${sr.color}"></span>${esc(sr.short)}</span><b>${opts.fmt(p[1])}</b></div>`; }
+        else dot.style.display = 'none';
+      });
+      if (!lines) { tip.style.display = 'none'; xh.style.display = 'none'; return; }
+      xh.style.display = 'block'; xh.setAttribute('x1', px); xh.setAttribute('x2', px);
+      tip.style.display = 'block';
+      tip.innerHTML = `<b>${new Date(when).toISOString().slice(0, 10)}</b>${lines}`;
+      const left = e.clientX - b.left + 14, w = tip.offsetWidth;
+      tip.style.left = (left + w > b.width ? e.clientX - b.left - w - 14 : left) + 'px';
+      tip.style.top = Math.max(0, e.clientY - b.top - 20) + 'px';
+    });
+    hit.addEventListener('mouseleave', () => { tip.style.display = 'none'; xh.style.display = 'none'; dots.forEach(d => d.style.display = 'none'); });
+  }
+
+  function renderCharts() {
+    const start = rangeStart(M.meta.as_of);
+    const chosen = byCo[sel.company].filter(b => sel.bonds.has(b.isin) && b.has_data);
+    const mk = (idx) => chosen.map(b => ({
+      name: shortName(b), short: shortName(b).replace(/ · .*$/, '').replace('convertible notes', 'conv').replace('senior notes', 'sr'), color: b.color ? css(b.color) : css('--muted'),
+      points: b.series.map(p => [new Date(p[0] + 'T00:00:00').getTime(), p[idx]]).filter(p => !start || p[0] >= start.getTime()),
+    }));
+    const labels = chosen.length <= 4;
+    lineChart($('mPx'), $('mPxLegend'), mk(1), { title: 'Price', tick: v => v.toFixed(0), fmt: v => v.toFixed(2), labels });
+    lineChart($('mY'), $('mYLegend'), mk(2), { title: 'Yield to maturity', tick: v => v.toFixed(1) + '%', fmt: v => v.toFixed(2) + '%', labels });
+    const extra = byCo[sel.company].filter(b => !b.color).length;
+    $('mPxSub').textContent = `${sel.company}: ${chosen.length} of ${byCo[sel.company].length} bonds · clean price (Bloomberg PX_LAST) · latest values as of ${M.meta.as_of} in the legend` + (extra ? ` · ${extra} beyond the 8-colour palette drawn in grey` : '');
+  }
+
+  function render() {
+    if ($('tab-market').hidden) return;
+    renderBrief();
+    renderSummary();
+    renderChips();
+    renderCharts();
+  }
+  window.renderMarket = render;
+  let rt; addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { if (!$('tab-market').hidden) renderCharts(); }, 120); });
+  render();
+};
+
+// public:loader  (password-protected: decrypts data/market.enc.json in the browser)
+(async function () {
+  const gate = document.getElementById('mBanner');
+  const b64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+  async function decrypt(pw, enc) {
+    const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(pw), 'PBKDF2', false, ['deriveKey']);
+    const key = await crypto.subtle.deriveKey({ name: 'PBKDF2', salt: b64(enc.salt), iterations: enc.iterations, hash: 'SHA-256' }, base, { name: 'AES-GCM', length: 256 }, false, ['decrypt']);
+    const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64(enc.iv) }, key, b64(enc.ciphertext));
+    return JSON.parse(new TextDecoder().decode(pt));
+  }
+  let enc = null;
+  try { const r = await fetch('data/market.enc.json', { cache: 'no-store' }); if (r.ok) enc = await r.json(); } catch (e) {}
+  if (!enc) { window.initMarket(); return; }
+  async function unlock(pw, silent) {
+    try {
+      window.MARKET = await decrypt(pw, enc);
+      try { sessionStorage.setItem('mpw', pw); } catch (e) {}
+      gate.hidden = true; gate.innerHTML = '';
+      window.initMarket();
+      return true;
+    } catch (e) {
+      const err = document.getElementById('pwErr'); if (err && !silent) err.textContent = 'Wrong password';
+      return false;
+    }
+  }
+  gate.hidden = false;
+  gate.innerHTML = '<b>Market data is password-protected.</b> Bloomberg prices and yields are encrypted on this site; enter the password to view them.' +
+    '<form id="pwForm"><input type="password" id="pw" placeholder="Password" autocomplete="current-password"> <button class="btn" type="submit">Unlock</button> <span id="pwErr" class="na"></span></form>';
+  document.getElementById('pwForm').onsubmit = (e) => { e.preventDefault(); unlock(document.getElementById('pw').value, false); };
+  let saved = null; try { saved = sessionStorage.getItem('mpw'); } catch (e) {}
+  if (saved) await unlock(saved, true);
+  window.renderMarket = window.renderMarket || (() => {});
+})();
+// /public:loader
+</script>
 <script>
 // initial tab: hash wins, then the remembered tab
 (function () {
