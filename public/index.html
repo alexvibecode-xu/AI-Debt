@@ -859,7 +859,8 @@ window.initMarket = function () {
     return JSON.parse(new TextDecoder().decode(pt));
   }
   let enc = null;
-  try { const r = await fetch('data/market.enc.json', { cache: 'no-store' }); if (r.ok) enc = await r.json(); } catch (e) {}
+  // unique query string defeats the 10-minute CDN cache, so a re-encrypted file is picked up at once
+  try { const r = await fetch('data/market.enc.json?t=' + Date.now(), { cache: 'no-store' }); if (r.ok) enc = await r.json(); } catch (e) {}
   if (!enc) { window.initMarket(); return; }
   async function unlock(pw, silent) {
     try {
