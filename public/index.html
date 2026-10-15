@@ -1,0 +1,513 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Financing Tracker</title>
+<style>
+  :root {
+    color-scheme: light;
+    --page: #f9f9f7;
+    --surface: #fcfcfb;
+    --ink: #0b0b0b;
+    --ink-2: #52514e;
+    --muted: #898781;
+    --grid: #e1e0d9;
+    --axis: #c3c2b7;
+    --border: rgba(11,11,11,0.10);
+    --series-1: #2a78d6;
+    --series-1-soft: #9ec5f4;
+    --hover: rgba(11,11,11,0.04);
+    --link: #1c5cab;
+    --good: #006300;
+    --bad: #d03b3b;
+    --c1: #2a78d6; --c2: #eb6834; --c3: #1baf7a; --c4: #eda100; --c5: #e87ba4; --c6: #008300; --c7: #6250d6; --c8: #e34948;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --page: #0d0d0d; --surface: #1a1a19; --ink: #f0efec; --ink-2: #c3c2b7; --muted: #898781;
+      --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,0.10);
+      --series-1: #3987e5; --series-1-soft: #1c5cab; --hover: rgba(255,255,255,0.05); --link: #86b6ef;
+      --good: #0ca30c; --bad: #e66767;
+      --c1: #3987e5; --c2: #d95926; --c3: #199e70; --c4: #c98500; --c5: #d55181; --c6: #008300; --c7: #9085e9; --c8: #e66767;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --page: #0d0d0d; --surface: #1a1a19; --ink: #f0efec; --ink-2: #c3c2b7; --muted: #898781;
+    --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,0.10);
+    --series-1: #3987e5; --series-1-soft: #1c5cab; --hover: rgba(255,255,255,0.05); --link: #86b6ef;
+    --good: #0ca30c; --bad: #e66767;
+    --c1: #3987e5; --c2: #d95926; --c3: #199e70; --c4: #c98500; --c5: #d55181; --c6: #008300; --c7: #9085e9; --c8: #e66767;
+  }
+
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--page); color: var(--ink); font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  a { color: var(--link); }
+  .wrap { max-width: 1280px; margin: 0 auto; padding: 24px 16px 48px; }
+  header h1 { font-size: 22px; margin: 0 0 4px; font-weight: 650; letter-spacing: -0.01em; }
+  header p { margin: 0; color: var(--ink-2); }
+  .meta { font-size: 12px; color: var(--muted); margin-top: 6px; }
+
+  .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--axis); margin: 18px 0 16px; }
+  .tab { font: inherit; font-weight: 600; background: none; border: none; border-bottom: 2px solid transparent; color: var(--muted); padding: 8px 14px; cursor: pointer; margin-bottom: -1px; }
+  .tab:hover { color: var(--ink); }
+  .tab.on { color: var(--ink); border-bottom-color: var(--series-1); }
+
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin: 20px 0; }
+  .tile { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; }
+  .tile .k { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+  .tile .v { font-size: 26px; font-weight: 600; margin-top: 2px; line-height: 1.1; }
+  .tile .s { font-size: 12px; color: var(--ink-2); margin-top: 4px; }
+
+  .filters { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 8px 0 16px; }
+  .filters input, .filters select, .filters button, .btn {
+    font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--border);
+    border-radius: 6px; padding: 7px 10px; min-height: 36px;
+  }
+  .filters input[type=search] { min-width: 240px; flex: 1 1 240px; }
+  .filters button, .btn { cursor: pointer; }
+  .filters button:hover, .btn:hover { background: var(--hover); }
+  .filters label { font-size: 12px; color: var(--muted); display: flex; gap: 6px; align-items: center; }
+  .seg { display: inline-flex; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+  .seg button { font: inherit; font-size: 12px; background: var(--surface); color: var(--ink-2); border: none; border-right: 1px solid var(--border); padding: 6px 10px; cursor: pointer; min-height: 34px; }
+  .seg button:last-child { border-right: none; }
+  .seg button.on { background: var(--series-1); color: #fff; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 12px; }
+  .chip { font: inherit; font-size: 12px; display: inline-flex; align-items: center; gap: 6px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 4px 10px; cursor: pointer; color: var(--ink-2); }
+  .chip.on { color: var(--ink); border-color: var(--axis); background: var(--hover); }
+  .chip .sw { width: 10px; height: 10px; border-radius: 2px; background: var(--grid); }
+  .chip.on .sw { background: var(--chipc); }
+  .chip.nodata { opacity: .55; text-decoration: line-through; }
+
+  .charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 12px; margin-bottom: 20px; }
+  @media (max-width: 420px) { .charts { grid-template-columns: 1fr; } }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; position: relative; }
+  .card h2 { font-size: 14px; font-weight: 600; margin: 0; }
+  .card .sub { font-size: 12px; color: var(--muted); margin: 2px 0 8px; }
+  .chart { width: 100%; height: 240px; position: relative; }
+  .chart.tall { height: 300px; }
+  .chart svg { width: 100%; height: 100%; display: block; overflow: visible; }
+  .chart .bar { fill: var(--series-1); cursor: pointer; }
+  .chart .bar.partial { fill: var(--series-1-soft); }
+  .chart .bar.dim { opacity: .35; }
+  .chart .bar.hit { fill: transparent; }
+  .chart g:hover .bar { filter: brightness(1.08); }
+  .chart .grid { stroke: var(--grid); stroke-width: 1; }
+  .chart .axis { stroke: var(--axis); stroke-width: 1; }
+  .chart .line { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+  .chart .xhair { stroke: var(--axis); stroke-width: 1; stroke-dasharray: 3 3; display: none; }
+  .chart .dot { stroke: var(--surface); stroke-width: 2; display: none; }
+  .chart text { fill: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+  .chart text.val { fill: var(--ink-2); font-weight: 600; font-size: 10px; }
+  .chart text.end { fill: var(--ink-2); font-size: 10px; }
+  .chart .empty { fill: var(--muted); font-size: 13px; }
+  .tip { position: absolute; pointer-events: none; background: var(--surface); color: var(--ink); border: 1px solid var(--border);
+         border-radius: 6px; padding: 6px 9px; font-size: 12px; box-shadow: 0 4px 14px rgba(0,0,0,.12); white-space: nowrap; display: none; z-index: 5; }
+  .tip b { font-weight: 600; }
+  .tip .row { display: flex; gap: 8px; justify-content: space-between; }
+  .legend-note { font-size: 11px; color: var(--muted); margin-top: 6px; }
+  .pace { overflow-x: auto; margin-top: 10px; border-top: 1px solid var(--grid); padding-top: 8px; }
+  .pace table { min-width: 0; width: auto; border-collapse: collapse; font-size: 11px; }
+  .pace th, .pace td { padding: 3px 7px; white-space: nowrap; border-bottom: none; text-align: right; font-variant-numeric: tabular-nums; position: static; cursor: default; }
+  .pace th { font-size: 10px; color: var(--muted); border-bottom: 1px solid var(--grid); }
+  .pace th:first-child, .pace td:first-child { text-align: left; color: var(--muted); font-weight: 600; position: sticky; left: 0; background: var(--surface); padding-left: 0; }
+  .pace td.v { color: var(--ink); font-weight: 600; }
+  .pace tr:hover td { background: transparent; }
+  .legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 11px; color: var(--ink-2); margin-top: 8px; }
+  .legend b { color: var(--ink); font-variant-numeric: tabular-nums; }
+  .swatch { display: inline-block; width: 10px; height: 10px; border-radius: 2px; vertical-align: -1px; margin-right: 4px; }
+  .banner { background: var(--hover); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; margin: 12px 0; font-size: 13px; color: var(--ink-2); }
+  .banner.sample { border-color: #eda100; }
+  .banner b { color: var(--ink); }
+
+  .tablehead { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px; margin: 4px 0 8px; }
+  .tablehead h2 { font-size: 15px; margin: 0; font-weight: 600; }
+  .count { font-size: 12px; color: var(--muted); }
+  .tablewrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 900px; }
+  th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); font-weight: 600;
+       padding: 10px 10px; border-bottom: 1px solid var(--axis); cursor: pointer; user-select: none; white-space: nowrap; position: sticky; top: 0; background: var(--surface); }
+  th.r, td.r { text-align: right; }
+  th .dir { color: var(--ink-2); margin-left: 3px; }
+  td { padding: 8px 10px; border-bottom: 1px solid var(--grid); vertical-align: top; }
+  tr:hover td { background: var(--hover); }
+  td.nowrap { white-space: nowrap; }
+  td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  td.b { font-weight: 550; }
+  td.pricing { color: var(--ink-2); max-width: 340px; }
+  td.src a { text-decoration: none; border-bottom: 1px solid var(--border); }
+  td.src a:hover { border-bottom-color: var(--link); }
+  .badge { display: inline-block; font-size: 11px; padding: 1px 6px; border-radius: 10px; background: var(--hover); color: var(--ink-2); }
+  .badge.traded { background: var(--series-1); color: #fff; }
+  .na { font-size: 11px; color: #d03b3b; font-weight: 600; }
+  td.rating { max-width: 170px; font-size: 12px; }
+  td.rating a { text-decoration: none; }
+  .new { color: var(--good); font-size: 11px; font-weight: 600; margin-left: 6px; }
+
+  /* market summary table */
+  table.summary { min-width: 1180px; font-size: 12.5px; }
+  table.summary th { cursor: default; padding: 8px 6px; }
+  table.summary th[data-s] { cursor: pointer; }
+  table.summary th[data-s]:hover { color: var(--ink); }
+  table.summary tr.flat td.name { padding-left: 6px; color: var(--ink); }
+  table.summary tr.flat td.name .co { color: var(--muted); font-weight: 400; }
+  table.summary th.grp { text-align: center; border-bottom: none; color: var(--ink-2); letter-spacing: .08em; }
+  table.summary td { padding: 6px 6px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  table.summary td.r { text-align: right; }
+  table.summary tr.co td { font-weight: 600; background: var(--hover); cursor: pointer; }
+  table.summary tr.co td.name { cursor: pointer; }
+  table.summary tr.bond td.name { padding-left: 26px; color: var(--ink-2); cursor: pointer; max-width: 360px; overflow: hidden; text-overflow: ellipsis; }
+  table.summary tr.bond.sel td.name { color: var(--ink); font-weight: 600; }
+  table.summary td.name .sw { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 6px; vertical-align: 0; }
+  table.summary td.sep { border-left: 1px solid var(--axis); }
+  .brief { margin: 12px 0 18px; }
+  .brief h2 { font-size: 15px; }
+  .brief .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 8px 24px; margin-top: 10px; }
+  .brief .k { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-bottom: 4px; }
+  .brief ul { margin: 0; padding-left: 18px; }
+  .brief li { margin: 2px 0; }
+  .brief table.movers { min-width: 0; width: 100%; margin-top: 12px; font-size: 12.5px; }
+  .brief table.movers th { position: static; cursor: default; padding: 6px 8px; }
+  .brief table.movers td { padding: 6px 8px; vertical-align: top; }
+  .brief table.movers td:first-child { color: var(--muted); font-weight: 600; white-space: nowrap; }
+  .brief .who { color: var(--muted); font-size: 11.5px; display: block; }
+  .pos { color: var(--good); }
+  .neg { color: var(--bad); }
+  .nil { color: var(--muted); }
+  .caret { display: inline-block; width: 14px; color: var(--muted); }
+
+  footer { margin-top: 20px; font-size: 12px; color: var(--muted); }
+  footer p { margin: 4px 0; }
+  .themebtn { float: right; font: inherit; font-size: 12px; background: none; border: 1px solid var(--border); color: var(--ink-2); border-radius: 6px; padding: 4px 8px; cursor: pointer; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <button class="themebtn" id="themeBtn" title="Toggle light/dark">Theme</button>
+    <h1>AI Financing Tracker</h1>
+    <p>Public debt, lease and structured financings to GPU clouds, AI campus developers and former miners. Every row links to its source.</p>
+  </header>
+
+  
+
+  <!-- ======================= TRACKER TAB ======================= -->
+  <section id="tab-tracker">
+  <div class="meta" id="meta"></div>
+
+  <section class="tiles" id="tiles"></section>
+
+  <section class="filters">
+    <input type="search" id="q" placeholder="Search borrower, lender, type, pricing, source…">
+    <select id="fType"><option value="">All types</option></select>
+    <select id="fMarket"><option value="">Traded + private</option></select>
+    <select id="fBorrower"><option value="">All borrowers</option></select>
+    <select id="fLender"><option value="">All lenders</option></select>
+    <select id="fFrom"><option value="">From: all time</option></select>
+    <label><input type="checkbox" id="fAmt"> amount disclosed only</label>
+    <button id="reset">Reset</button>
+  </section>
+
+  <section class="charts">
+    <div class="card">
+      <h2>Number of deals by calendar quarter</h2>
+      <div class="sub">Announced financings in the current filter · click a bar to filter the table to that quarter</div>
+      <div class="chart" id="chartCount"></div>
+      <div class="legend-note"><span class="swatch" style="background:var(--series-1)"></span>complete quarter &nbsp; <span class="swatch" style="background:var(--series-1-soft)"></span>current quarter (partial)</div>
+      <div class="pace" id="paceCount"></div>
+    </div>
+    <div class="card">
+      <h2>Announced deal size by calendar quarter, $B</h2>
+      <div class="sub">Sum of announced amounts in $ billions · deals with undisclosed size count in # but not in $</div>
+      <div class="chart" id="chartSize"></div>
+      <div class="legend-note"><span class="swatch" style="background:var(--series-1)"></span>complete quarter &nbsp; <span class="swatch" style="background:var(--series-1-soft)"></span>current quarter (partial)</div>
+      <div class="pace" id="paceSize"></div>
+    </div>
+  </section>
+
+  <div class="tablehead">
+    <h2>All financings</h2>
+    <span class="count" id="count"></span>
+  </div>
+  <div class="tablewrap">
+    <table id="tbl">
+      <thead><tr>
+        <th data-k="date">Date<span class="dir"></span></th>
+        <th data-k="borrower">Borrower<span class="dir"></span></th>
+        <th data-k="amount_musd" class="r">Amount<span class="dir"></span></th>
+        <th data-k="type">Type<span class="dir"></span></th>
+        <th data-k="market">Market<span class="dir"></span></th>
+        <th data-k="rating">Rating<span class="dir"></span></th>
+        <th data-k="lenders_text">Lenders<span class="dir"></span></th>
+        <th data-k="pricing">Pricing<span class="dir"></span></th>
+        <th data-k="source_name">Source<span class="dir"></span></th>
+      </tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <footer>
+    <p><b>Market</b> says whether the instrument trades: <i>Traded bond</i> = senior or convertible notes sold to investors (Bloomberg has a price); <i>Syndicated loan</i> = broadly syndicated term loan that trades in the loan market; <i>Private</i> = bank facilities, private credit, leases and vendor financing with no market price. Traded rows show their Bloomberg ISIN (one per tranche); <b>BBG ID: NA</b> means Bloomberg has no record of the instrument yet. The per-tranche list is in <code>data/bonds.csv</code>.</p>
+    <p><b>Rating</b> comes from one source, <a href="https://ccir.io/credit#rated" target="_blank" rel="noopener">ccir.io's rated GPU-collateral financings</a>, matched to deals by borrower, date and size. Hover a rating for the facility name, the date it entered the public record and the offtaker. A dash means no public agency grade is on record there, not that the deal is unrated.</p>
+    <p>Data scraped from <a href="https://www.amcompute.com/gpu-financing-tracker" target="_blank" rel="noopener">American Compute's GPU Financing Tracker</a>. Amounts are as announced; the source site's own headline total counts new money only, so it can be lower than the sum shown here. Convertible notes, senior notes, loans and leases are all included; filter by type to narrow.</p>
+    <p>Data refreshes automatically every weekday morning (GitHub Actions re-runs the scraper and republishes this page).</p>
+  </footer>
+  </section>
+
+  
+</div>
+
+<script src="data/deals.js"></script>
+<script>
+// ------------------------------------------------------------------ shared
+const $ = (id) => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+function niceStep(range, ticks) {
+  const raw = range / ticks, p = Math.pow(10, Math.floor(Math.log10(raw || 1))), r = raw / p;
+  return (r <= 1 ? 1 : r <= 2 ? 2 : r <= 2.5 ? 2.5 : r <= 5 ? 5 : 10) * p;
+}
+const root = document.documentElement;
+try { const t = localStorage.getItem('theme'); if (t) root.dataset.theme = t; } catch (e) {}
+$('themeBtn').onclick = () => {
+  const dark = root.dataset.theme === 'dark' || (!root.dataset.theme && matchMedia('(prefers-color-scheme: dark)').matches);
+  root.dataset.theme = dark ? 'light' : 'dark';
+  try { localStorage.setItem('theme', root.dataset.theme); } catch (e) {}
+  window.renderTracker && window.renderTracker();
+  window.renderMarket && window.renderMarket();
+};
+
+// ------------------------------------------------------------------ tabs
+function showTab(name) {
+  if (!$('tab-market')) name = 'tracker';   // public build has no Market tab
+  document.querySelectorAll('.tab').forEach(b => b.classList.toggle('on', b.dataset.tab === name));
+  $('tab-tracker').hidden = name !== 'tracker';
+  if ($('tab-market')) $('tab-market').hidden = name !== 'market';
+  try { localStorage.setItem('tab', name); } catch (e) {}
+  if (name === 'tracker') window.renderTracker && window.renderTracker();
+  else window.renderMarket && window.renderMarket();
+  if (location.hash !== '#' + name) history.replaceState(null, '', '#' + name);
+}
+document.querySelectorAll('.tab').forEach(b => b.onclick = () => showTab(b.dataset.tab));
+</script>
+
+<script>
+// ------------------------------------------------------------------ TRACKER TAB
+(function () {
+  const D = window.DEALS;
+  if (!D) { $('meta').textContent = 'No data found. Run Refresh data.cmd'; return; }
+  const deals = D.deals.slice();
+
+  const fmtB = (m) => m == null ? 'n/d' : (m >= 1000 ? '$' + (m / 1000).toFixed(m >= 10000 ? 0 : 1) + 'B' : '$' + Math.round(m) + 'M');
+  const uniq = (arr) => Array.from(new Set(arr)).sort();
+  const today = new Date();
+  const curQ = `${today.getFullYear()} Q${Math.floor(today.getMonth() / 3) + 1}`;
+  const scrapedQ = (D.meta.scraped_at || '').slice(0, 10);
+
+  function quarterRange() {
+    const qs = deals.map(d => d.quarter).filter(Boolean).sort();
+    if (!qs.length) return [];
+    const [y0, q0] = qs[0].split(' Q').map(Number);
+    const last = qs[qs.length - 1] > curQ ? qs[qs.length - 1] : curQ;
+    const [y1, q1] = last.split(' Q').map(Number);
+    const out = [];
+    for (let y = y0, q = q0; y < y1 || (y === y1 && q <= q1); ) { out.push(`${y} Q${q}`); q++; if (q > 4) { q = 1; y++; } }
+    return out;
+  }
+  const QUARTERS = quarterRange();
+  const fmtQ = (q) => q ? q.slice(2, 4) + "'" + q.slice(5) : '';
+
+  const fill = (sel, values, label) => values.forEach(v => { const o = document.createElement('option'); o.value = v; o.textContent = label ? label(v) : v; sel.appendChild(o); });
+  fill($('fType'), uniq(deals.map(d => d.type)));
+  fill($('fMarket'), ['Traded bond', 'Syndicated loan', 'Private'].filter(m => deals.some(d => d.market === m)), m => m === 'Private' ? 'Private only' : m + 's only');
+  fill($('fBorrower'), uniq(deals.map(d => d.borrower)));
+  fill($('fLender'), uniq(deals.flatMap(d => d.lenders)).filter(l => l !== 'Not named'));
+  fill($('fFrom'), QUARTERS, q => 'From ' + fmtQ(q));
+
+  let state = { q: '', type: '', market: '', borrower: '', lender: '', from: '', amt: false, quarter: null, sortKey: 'date', sortDir: -1 };
+  const inputs = { q: 'q', type: 'fType', market: 'fMarket', borrower: 'fBorrower', lender: 'fLender', from: 'fFrom' };
+  Object.entries(inputs).forEach(([k, id]) => $(id).addEventListener('input', () => { state[k] = $(id).value; render(); }));
+  $('fAmt').addEventListener('change', () => { state.amt = $('fAmt').checked; render(); });
+  $('reset').onclick = () => {
+    state = { ...state, q: '', type: '', market: '', borrower: '', lender: '', from: '', amt: false, quarter: null };
+    Object.values(inputs).forEach(id => $(id).value = ''); $('fAmt').checked = false; render();
+  };
+
+  function filtered(ignoreQuarter) {
+    const q = state.q.trim().toLowerCase();
+    return deals.filter(d =>
+      (!state.type || d.type === state.type) &&
+      (!state.market || d.market === state.market) &&
+      (!state.borrower || d.borrower === state.borrower) &&
+      (!state.lender || d.lenders.includes(state.lender)) &&
+      (!state.from || (d.quarter && d.quarter >= state.from)) &&
+      (!state.amt || d.amount_musd != null) &&
+      (ignoreQuarter || !state.quarter || d.quarter === state.quarter) &&
+      (!q || [d.borrower, d.type, d.market, d.rating, d.lenders_text, d.pricing, d.source_name, d.date_text, d.amount_text, (d.bbg_ids || []).join(' ')].join(' ').toLowerCase().includes(q))
+    );
+  }
+
+  function renderTiles(rows) {
+    const total = rows.reduce((s, d) => s + (d.amount_musd || 0), 0);
+    const nd = rows.filter(d => d.amount_musd == null).length;
+    const last4 = QUARTERS.slice(-4);
+    const recent = rows.filter(d => last4.includes(d.quarter));
+    const recentTotal = recent.reduce((s, d) => s + (d.amount_musd || 0), 0);
+    const borrowers = new Set(rows.map(d => d.borrower)).size;
+    const tiles = [
+      ['Deals', rows.length, nd ? `${nd} with undisclosed size` : 'all sizes disclosed'],
+      ['Announced volume', fmtB(total), 'sum of announced amounts'],
+      ['Last 4 quarters', fmtB(recentTotal), `${recent.length} deals · ${fmtQ(last4[0])} to ${fmtQ(last4[3])}`],
+      ['Borrowers', borrowers, `${new Set(rows.flatMap(d => d.lenders).filter(l => l !== 'Not named')).size} named lenders`],
+      ['Traded bonds', rows.filter(d => d.market === 'Traded bond').length, fmtB(rows.filter(d => d.market === 'Traded bond').reduce((s, d) => s + (d.amount_musd || 0), 0)) + ' · have a market price'],
+    ];
+    $('tiles').innerHTML = tiles.map(([k, v, s]) => `<div class="tile"><div class="k">${k}</div><div class="v">${v}</div><div class="s">${s}</div></div>`).join('');
+  }
+
+  function barChart(el, data, opts) {
+    const W = el.clientWidth || 500, H = el.clientHeight || 240;
+    const tight = (W - 48) / data.length < 40;
+    const m = { t: 18, r: 8, b: tight ? 40 : 26, l: 40 };
+    const iw = W - m.l - m.r, ih = H - m.t - m.b;
+    const max = Math.max(...data.map(d => d.value), 0) || 1;
+    const step = niceStep(max, 4);
+    const top = Math.ceil(max / step) * step || step;
+    const y = v => m.t + ih - (v / top) * ih;
+    const n = data.length, slot = iw / n, bw = Math.max(2, Math.min(slot - 2, slot * 0.72));
+    let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${opts.title}">`;
+    for (let v = 0; v <= top + 1e-9; v += step) {
+      s += `<line class="grid" x1="${m.l}" x2="${W - m.r}" y1="${y(v)}" y2="${y(v)}"/>`;
+      s += `<text x="${m.l - 6}" y="${y(v) + 4}" text-anchor="end">${opts.tick(v)}</text>`;
+    }
+    data.forEach((d, i) => {
+      const x = m.l + i * slot + (slot - bw) / 2, h = Math.max(0, y(0) - y(d.value)), yy = y(d.value);
+      const r = Math.min(4, bw / 2, h);
+      const path = h > 0 ? `M${x},${y(0)} V${yy + r} Q${x},${yy} ${x + r},${yy} H${x + bw - r} Q${x + bw},${yy} ${x + bw},${yy + r} V${y(0)} Z` : '';
+      const cls = 'bar' + (d.partial ? ' partial' : '') + (state.quarter && state.quarter !== d.label ? ' dim' : '');
+      s += `<g data-i="${i}"><rect class="bar hit" x="${m.l + i * slot}" y="${m.t}" width="${slot}" height="${ih}"/>`;
+      if (path) s += `<path class="${cls}" d="${path}"/>`;
+      if (d.value > 0) s += `<text class="val" x="${x + bw / 2}" y="${yy - 4}" text-anchor="middle">${opts.fmt(d.value)}</text>`;
+      s += `</g>`;
+    });
+    s += `<line class="axis" x1="${m.l}" x2="${W - m.r}" y1="${y(0)}" y2="${y(0)}"/>`;
+    data.forEach((d, i) => {
+      const cx = m.l + i * slot + slot / 2;
+      const lbl = fmtQ(d.label) + (d.partial ? '*' : '');
+      s += tight
+        ? `<text x="${cx}" y="${H - m.b + 12}" text-anchor="end" transform="rotate(-45 ${cx} ${H - m.b + 12})">${lbl}</text>`
+        : `<text x="${cx}" y="${H - m.b + 16}" text-anchor="middle">${lbl}</text>`;
+    });
+    s += `</svg><div class="tip"></div>`;
+    el.innerHTML = s;
+    const tip = el.querySelector('.tip');
+    el.querySelectorAll('g[data-i]').forEach(g => {
+      const d = data[+g.dataset.i];
+      g.addEventListener('mousemove', (e) => {
+        const b = el.getBoundingClientRect();
+        tip.style.display = 'block';
+        tip.innerHTML = `<b>${fmtQ(d.label)}${d.partial ? ' (partial)' : ''}</b><br>${opts.tipLine(d)}`;
+        const tx = Math.min(e.clientX - b.left + 12, W - tip.offsetWidth - 4);
+        tip.style.left = tx + 'px'; tip.style.top = (e.clientY - b.top - 36) + 'px';
+      });
+      g.addEventListener('mouseleave', () => tip.style.display = 'none');
+      g.addEventListener('click', () => { state.quarter = state.quarter === d.label ? null : d.label; render(); });
+    });
+  }
+
+  function renderCharts(rows) {
+    const by = {};
+    QUARTERS.forEach(q => by[q] = { n: 0, musd: 0, nd: 0 });
+    rows.forEach(d => { if (d.quarter && by[d.quarter]) { by[d.quarter].n++; by[d.quarter].musd += d.amount_musd || 0; if (d.amount_musd == null) by[d.quarter].nd++; } });
+    const series = QUARTERS.map(q => ({ label: q, partial: q === curQ, ...by[q] }));
+    barChart($('chartCount'), series.map(d => ({ ...d, value: d.n })), {
+      title: 'Deals per quarter', tick: v => v, fmt: v => v,
+      tipLine: d => `${d.n} deal${d.n === 1 ? '' : 's'} · ${fmtB(d.musd)} announced${d.nd ? ` · ${d.nd} undisclosed` : ''}`,
+    });
+    barChart($('chartSize'), series.map(d => ({ ...d, value: d.musd / 1000 })), {
+      title: 'Announced volume per quarter', tick: v => '$' + v + 'B', fmt: v => (v >= 10 ? v.toFixed(0) : v.toFixed(1)),
+      tipLine: d => `${fmtB(d.musd)} across ${d.n} deal${d.n === 1 ? '' : 's'}${d.nd ? ` (${d.nd} undisclosed)` : ''}`,
+    });
+    paceTable($('paceCount'), series.map(d => d.n), v => v, 'Deals');
+    paceTable($('paceSize'), series.map(d => d.musd / 1000), v => '$' + (v >= 10 ? v.toFixed(0) : v.toFixed(1)) + 'B', '$B');
+  }
+
+  // Pace table: one column per quarter with the value, Q/Q and Y/Y change. Current quarter is partial.
+  function paceTable(el, values, fmt, label) {
+    const pct = (v, base) => (base == null || base === 0 || v == null) ? null : v / base - 1;
+    // growth of 10x or more is shown as a multiple ("12x") instead of "+1100%"
+    const cell = p => p == null ? '<td class="nil">–</td>' : `<td class="${p > 0 ? 'pos' : p < 0 ? 'neg' : ''}" title="${(p * 100).toFixed(0)}%">${p >= 9.5 ? (1 + p).toFixed(0) + 'x' : (p > 0 ? '+' : '') + (p * 100).toFixed(0) + '%'}</td>`;
+    const qq = values.map((v, i) => i > 0 ? pct(v, values[i - 1]) : null);
+    const yy = values.map((v, i) => i >= 4 ? pct(v, values[i - 4]) : null);
+    el.innerHTML = `<table>
+      <tr><th></th>${QUARTERS.map(q => `<th>${fmtQ(q)}${q === curQ ? '*' : ''}</th>`).join('')}</tr>
+      <tr><td>${label}</td>${values.map(v => `<td class="v">${fmt(v)}</td>`).join('')}</tr>
+      <tr><td>Q/Q</td>${qq.map(cell).join('')}</tr>
+      <tr><td>Y/Y</td>${yy.map(cell).join('')}</tr>
+    </table>`;
+  }
+
+  document.querySelectorAll('#tbl th[data-k]').forEach(th => th.onclick = () => {
+    const k = th.dataset.k;
+    if (state.sortKey === k) state.sortDir *= -1; else { state.sortKey = k; state.sortDir = (k === 'date' || k === 'amount_musd') ? -1 : 1; }
+    render();
+  });
+  function host(u) { try { return new URL(u).hostname.replace(/^www\./, ''); } catch (e) { return ''; } }
+  function renderTable(rows) {
+    const k = state.sortKey, dir = state.sortDir;
+    rows = rows.slice().sort((a, b) => {
+      let va = a[k], vb = b[k];
+      if (k === 'amount_musd') { va = va ?? -1; vb = vb ?? -1; return (va - vb) * dir; }
+      va = (va ?? '').toString().toLowerCase(); vb = (vb ?? '').toString().toLowerCase();
+      return (va < vb ? -1 : va > vb ? 1 : 0) * dir || (a.date < b.date ? 1 : -1);
+    });
+    document.querySelectorAll('#tbl th[data-k] .dir').forEach(s => s.textContent = '');
+    document.querySelector(`#tbl th[data-k="${k}"] .dir`).textContent = dir > 0 ? '↑' : '↓';
+    const total = rows.reduce((s, d) => s + (d.amount_musd || 0), 0);
+    $('count').textContent = `${rows.length} of ${deals.length} deals · ${fmtB(total)} announced` + (state.quarter ? ` · quarter: ${fmtQ(state.quarter)} (click bar again to clear)` : '');
+    $('tbl').querySelector('tbody').innerHTML = rows.map(d => `
+      <tr>
+        <td class="nowrap">${esc(d.date_text)}${d.first_seen === scrapedQ && D.meta.new_since_last_run.includes(d.id) ? '<span class="new">NEW</span>' : ''}</td>
+        <td class="b">${esc(d.borrower)}</td>
+        <td class="num r">${esc(d.amount_text)}</td>
+        <td><span class="badge">${esc(d.type)}</span></td>
+        <td class="nowrap"><span class="badge ${d.market === 'Private' ? '' : 'traded'}">${esc(d.market)}</span>${d.bbg_ids == null ? '' : d.bbg_ids.length ? `<br><span class="count" title="Bloomberg ISIN">${d.bbg_ids.map(esc).join('<br>')}</span>` : '<br><span class="na">BBG ID: NA</span>'}</td>
+        <td class="rating">${d.rating ? `<span title="${esc(d.rating_detail || '')}">${esc(d.rating)}</span><br><a class="count" href="${esc(d.rating_source_url || '')}" target="_blank" rel="noopener">ccir.io ↗</a>` : '<span class="count">–</span>'}</td>
+        <td>${esc(d.lenders_text)}</td>
+        <td class="pricing">${esc(d.pricing || '–')}</td>
+        <td class="src nowrap">${d.source_url ? `<a href="${esc(d.source_url)}" target="_blank" rel="noopener" title="${esc(d.source_url)}">${esc(d.source_name)} ↗</a><br><span class="count">${esc(host(d.source_url))}</span>` : esc(d.source_name)}</td>
+      </tr>`).join('');
+  }
+
+  const scraped = D.meta.scraped_at ? new Date(D.meta.scraped_at).toLocaleString() : '?';
+  $('meta').innerHTML = `Source: <a href="${D.meta.source_url}" target="_blank" rel="noopener">amcompute.com</a>` +
+    (D.meta.upstream_updated ? ` (site updated ${esc(D.meta.upstream_updated)})` : '') +
+    ` · scraped ${scraped} · ${D.meta.deal_count} deals` +
+    (D.meta.new_since_last_run?.length ? ` · <b>${D.meta.new_since_last_run.length} new since last run</b>` : '');
+
+  function render() {
+    if ($('tab-tracker').hidden) return;
+    if (!$('tab-market')) $('tab-tracker').hidden = false;
+    const rows = filtered(false);
+    renderTiles(rows);
+    renderCharts(filtered(true));
+    renderTable(rows);
+  }
+  window.renderTracker = render;
+  let rt; addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { if (!$('tab-tracker').hidden) renderCharts(filtered(true)); }, 120); });
+  render();
+})();
+</script>
+
+
+<script>
+// initial tab: hash wins, then the remembered tab
+(function () {
+  let t = location.hash === '#market' ? 'market' : location.hash === '#tracker' ? 'tracker' : null;
+  if (!t) { try { t = localStorage.getItem('tab'); } catch (e) {} }
+  showTab(t === 'market' ? 'market' : 'tracker');
+})();
+</script>
+</body>
+</html>
