@@ -1,7 +1,7 @@
 window.DEALS = {
   "meta": {
     "source_url": "https://www.amcompute.com/gpu-financing-tracker",
-    "scraped_at": "2026-10-16T12:32:38+00:00",
+    "scraped_at": "2026-10-16T20:09:49+00:00",
     "upstream_updated": "October 10, 2026",
     "deal_count": 106,
     "total_musd": 238236.0,
