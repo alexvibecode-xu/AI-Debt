@@ -1,11 +1,16 @@
 window.DEALS = {
   "meta": {
     "source_url": "https://www.amcompute.com/gpu-financing-tracker",
-    "scraped_at": "2026-10-18T16:45:33+00:00",
+    "scraped_at": "2026-10-19T12:35:22+00:00",
     "upstream_updated": "October 10, 2026",
-    "deal_count": 106,
-    "total_musd": 238236.0,
-    "new_since_last_run": [],
+    "deal_count": 110,
+    "total_musd": 244034.0,
+    "new_since_last_run": [
+      "hut-8-2026-09-revolver-1-1b",
+      "hut-8-2026-06-senior-notes-4-3b",
+      "iren-2025-11-equipment-lease-200m",
+      "iren-2025-08-equipment-lease-198m"
+    ],
     "removed_since_last_run": []
   },
   "deals": [
@@ -82,6 +87,32 @@ window.DEALS = {
       "source_name": "Pulse 2.0",
       "source_url": "https://pulse2.com/gmi-cloud-raises-668-million-to-expand-global-ai-infrastructure/",
       "first_seen": "2026-10-15",
+      "rating": null,
+      "rating_detail": null,
+      "rating_source_url": null,
+      "bbg_ids": null
+    },
+    {
+      "id": "hut-8-2026-09-revolver-1-1b",
+      "market": "Private",
+      "date": "2026-09-24",
+      "date_precision": "day",
+      "date_text": "Sep 24, 2026",
+      "quarter": "2026 Q3",
+      "year": 2026,
+      "borrower": "Hut 8",
+      "amount_musd": 1100.0,
+      "amount_text": "$1.1B",
+      "type": "Revolver",
+      "lenders": [
+        "JPMorgan"
+      ],
+      "lenders_more": 0,
+      "lenders_text": "JPMorgan",
+      "pricing": "Term SOFR + 1.50% to 2.00% (initially 1.75%), set by debt to market capitalization",
+      "source_name": "SEC",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1964789/000110465926111154/tm2625691d1_8k.htm",
+      "first_seen": "2026-10-19",
       "rating": null,
       "rating_detail": null,
       "rating_source_url": null,
@@ -180,16 +211,13 @@ window.DEALS = {
       "amount_text": "$725M",
       "type": "Equipment lease",
       "lenders": [
-        "MUFG",
-        "Axos",
-        "BMO",
-        "Wells Fargo"
+        "MUFG"
       ],
-      "lenders_more": 1,
-      "lenders_text": "MUFG, Axos, BMO, Wells Fargo +1",
-      "pricing": null,
+      "lenders_more": 4,
+      "lenders_text": "MUFG +4",
+      "pricing": "Fixed per advance at the term SOFR swap rate + 2.75%; commitment fee 0.20%, rising to 0.40% after six months",
       "source_name": "SEC",
-      "source_url": "https://www.sec.gov/Archives/edgar/data/1582961/000110465926106704/tm2625205d1_ex99-1.htm",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1582961/000110465926106704/tm2625205d1_8k.htm",
       "first_seen": "2026-10-15",
       "rating": null,
       "rating_detail": null,
@@ -664,6 +692,32 @@ window.DEALS = {
       "bbg_ids": [
         "XS3333139528"
       ]
+    },
+    {
+      "id": "hut-8-2026-06-senior-notes-4-3b",
+      "market": "Traded bond",
+      "date": "2026-06-09",
+      "date_precision": "day",
+      "date_text": "Jun 9, 2026",
+      "quarter": "2026 Q2",
+      "year": 2026,
+      "borrower": "Hut 8",
+      "amount_musd": 4300.0,
+      "amount_text": "$4.3B",
+      "type": "Senior notes",
+      "lenders": [
+        "Not named"
+      ],
+      "lenders_more": 0,
+      "lenders_text": "Not named",
+      "pricing": "6.129% fixed",
+      "source_name": "SEC",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1964789/000110465926090025/hut-20260630x10q.htm",
+      "first_seen": "2026-10-19",
+      "rating": null,
+      "rating_detail": null,
+      "rating_source_url": null,
+      "bbg_ids": []
     },
     {
       "id": "iren-2026-06-ddtl-1-5b",
@@ -1592,6 +1646,32 @@ window.DEALS = {
       "bbg_ids": null
     },
     {
+      "id": "iren-2025-11-equipment-lease-200m",
+      "market": "Private",
+      "date": "2025-11-01",
+      "date_precision": "month",
+      "date_text": "Nov 2025",
+      "quarter": "2025 Q4",
+      "year": 2025,
+      "borrower": "IREN",
+      "amount_musd": 200.0,
+      "amount_text": "$200M",
+      "type": "Equipment lease",
+      "lenders": [
+        "Not named"
+      ],
+      "lenders_more": 0,
+      "lenders_text": "Not named",
+      "pricing": null,
+      "source_name": "SEC",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1878848/000187884826000052/iren-20260630.htm",
+      "first_seen": "2026-10-19",
+      "rating": null,
+      "rating_detail": null,
+      "rating_source_url": null,
+      "bbg_ids": null
+    },
+    {
       "id": "terawulf-2025-10-convertible-notes-1b",
       "market": "Traded bond",
       "date": "2025-10-29",
@@ -1941,6 +2021,32 @@ window.DEALS = {
       "source_name": "DCD",
       "source_url": "https://www.datacenterdynamics.com/en/news/galaxy-digital-closes-14bn-debt-facility-for-helios-data-center-campus-in-texas/",
       "first_seen": "2026-10-15",
+      "rating": null,
+      "rating_detail": null,
+      "rating_source_url": null,
+      "bbg_ids": null
+    },
+    {
+      "id": "iren-2025-08-equipment-lease-198m",
+      "market": "Private",
+      "date": "2025-08-01",
+      "date_precision": "month",
+      "date_text": "Aug 2025",
+      "quarter": "2025 Q3",
+      "year": 2025,
+      "borrower": "IREN",
+      "amount_musd": 198.0,
+      "amount_text": "$198M",
+      "type": "Equipment lease",
+      "lenders": [
+        "Not named"
+      ],
+      "lenders_more": 0,
+      "lenders_text": "Not named",
+      "pricing": null,
+      "source_name": "SEC",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1878848/000187884826000052/iren-20260630.htm",
+      "first_seen": "2026-10-19",
       "rating": null,
       "rating_detail": null,
       "rating_source_url": null,
