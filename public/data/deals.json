@@ -1,16 +1,11 @@
 {
   "meta": {
     "source_url": "https://www.amcompute.com/gpu-financing-tracker",
-    "scraped_at": "2026-10-19T12:35:22+00:00",
+    "scraped_at": "2026-10-20T12:32:38+00:00",
     "upstream_updated": "October 10, 2026",
     "deal_count": 110,
     "total_musd": 244034.0,
-    "new_since_last_run": [
-      "hut-8-2026-09-revolver-1-1b",
-      "hut-8-2026-06-senior-notes-4-3b",
-      "iren-2025-11-equipment-lease-200m",
-      "iren-2025-08-equipment-lease-198m"
-    ],
+    "new_since_last_run": [],
     "removed_since_last_run": []
   },
   "deals": [
