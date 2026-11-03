@@ -1,7 +1,7 @@
 {
   "meta": {
     "source_url": "https://www.amcompute.com/gpu-financing-tracker",
-    "scraped_at": "2026-11-02T23:02:25+00:00",
+    "scraped_at": "2026-11-03T12:53:20+00:00",
     "upstream_updated": "October 10, 2026",
     "deal_count": 110,
     "total_musd": 244034.0,
@@ -299,7 +299,7 @@
       "source_url": "https://runtimewire.com/article/nscale-3-billion-debt-texas-north-carolina-ai-campuses",
       "first_seen": "2026-10-15",
       "rating": "Investment grade, stable outlook (per S-1; agency not named)",
-      "rating_detail": "DDTL (Madison County SPV) · on record 2026-08-31 · offtaker: Customer name redacted in the filed credit agreement",
+      "rating_detail": "DDTL (Madison SPV) · on record 2026-08-31 · offtaker: Customer name redacted in the filed credit agreement",
       "rating_source_url": "https://ccir.io/credit#rated",
       "bbg_ids": null
     },
