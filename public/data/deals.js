@@ -1,7 +1,7 @@
 window.DEALS = {
   "meta": {
     "source_url": "https://www.amcompute.com/gpu-financing-tracker",
-    "scraped_at": "2026-11-09T12:59:57+00:00",
+    "scraped_at": "2026-11-09T23:02:46+00:00",
     "upstream_updated": "October 10, 2026",
     "deal_count": 110,
     "total_musd": 244034.0,
@@ -31,7 +31,7 @@ window.DEALS = {
       "source_url": "https://lambda.ai/blog/lambda-closes-1-billion-senior-secured-fixed-rate-financing",
       "first_seen": "2026-10-15",
       "rating": "Baa1 (Moody's) · A (low) (DBRS)",
-      "rating_detail": "Fixed-rate DDTL · on record 2026-10-01 · offtaker: Two investment-grade offtakers (three deployments)",
+      "rating_detail": "Fixed-rate DDTL · on record 2026-10-01 · offtaker: Two investment-grade offtakers (three deployments); the release calls them hyperscale customers",
       "rating_source_url": "https://ccir.io/credit#rated",
       "bbg_ids": null
     },
@@ -271,8 +271,8 @@ window.DEALS = {
       "source_name": "Runtime Wire",
       "source_url": "https://runtimewire.com/article/nscale-3-billion-debt-texas-north-carolina-ai-campuses",
       "first_seen": "2026-10-15",
-      "rating": "Baa1 (Moody's)",
-      "rating_detail": "DDTL (Ward County SPV) · on record 2026-08-12 · offtaker: Microsoft take-or-pay (named as Customer in the filed credit agreement)",
+      "rating": "Investment grade, stable outlook (per S-1; agency not named)",
+      "rating_detail": "DDTL (Ward County SPV) · on record 2026-08-31 · offtaker: Microsoft take-or-pay (named as Customer in the filed credit agreement)",
       "rating_source_url": "https://ccir.io/credit#rated",
       "bbg_ids": null
     },
@@ -326,7 +326,7 @@ window.DEALS = {
       "source_url": "https://lambda.ai/blog/lambda-closes-926-million-senior-secured-term-loan-b-facility",
       "first_seen": "2026-10-15",
       "rating": "Baa2 (Moody's)",
-      "rating_detail": "Term Loan B · on record 2026-08-11 · offtaker: Investment-grade offtaker per release (NVIDIA per press)",
+      "rating_detail": "Term Loan B · on record 2026-08-12 · offtaker: Investment-grade offtaker per release (NVIDIA per press)",
       "rating_source_url": "https://ccir.io/credit#rated",
       "bbg_ids": null
     },
